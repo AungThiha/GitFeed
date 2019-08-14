@@ -39,6 +39,7 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Path
 
 
@@ -67,7 +68,8 @@ interface GitHubApi {
 
   @GET("/repos/ReactiveX/{repo}/events")
   fun fetchEvents(
-          @Path("repo") repo: String
+          @Path("repo") repo: String,
+          @Header("If-Modified-Since") lastModified: String
   ): Observable<Response<List<AnyDict>>>
 
 }
