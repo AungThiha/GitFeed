@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
     swipeContainer.setOnRefreshListener {
       adapter.clear()
-      viewModel.fetchEvents("RxKotlin")
+      viewModel.fetchEvents()
     }
 
     viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -33,6 +33,6 @@ class MainActivity : AppCompatActivity() {
       swipeContainer.isRefreshing = false
     })
 
-    viewModel.fetchEvents("RxKotlin")
+    viewModel.fetchEvents()
   }
 }

@@ -44,8 +44,6 @@ class MainViewModel : ViewModel() {
 
     val eventLiveData = MutableLiveData<List<Event>>()
 
-    private var lastModified: String? = null
-
     var events = mutableListOf<Event>()
 
     private val gitHubApi by lazy {
@@ -54,18 +52,26 @@ class MainViewModel : ViewModel() {
 
     private val disposables = CompositeDisposable()
 
-    fun fetchEvents(repo: String) {
+    fun fetchEvents() {
 
         eventLiveData.value = EventsStore.readEvents()
 
-        lastModified = EventsStore.readLastModified()
-
-        val apiResponse = gitHubApi.fetchEvents(
-                repo,
-                lastModified?.trim() ?: ""
-        )
+        val apiResponse = gitHubApi.fetchTopKotlinRepos()
 
         apiResponse
+                .flatMap { repos: TopResponse ->
+                    if (repos.items == null)
+                        Observable.empty()
+                    else
+                        Observable.fromIterable(
+                                repos.items.map { it["full_name"] as String }
+                        )
+                }.filter { repo: String ->
+                    repo.isNotEmpty()
+                }
+                .flatMap { repo: String ->
+                    gitHubApi.fetchEvents(repo)
+                }
                 .filter { response ->
                     (200..300).contains(response.code())
                 }
@@ -87,29 +93,6 @@ class MainViewModel : ViewModel() {
                         onError = { error ->
                             println("Error ::: ${error.message}")
                         }
-                ).addTo(disposables)
-
-        apiResponse
-                .filter {response ->
-                    (200 until 400).contains(response.code())
-                }
-                .flatMap { response ->
-                    val value = response.headers().get("Last-Modified")
-                    if (value == null) {
-                        Observable.empty()
-                    } else {
-                        Observable.just(value)
-                    }
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeBy(
-                    onNext = { lastModified ->
-                        EventsStore.saveLastModified(lastModified)
-                    },
-                    onError = { error ->
-                        println("Last Modified Error ::: ${error.message}")
-                    }
                 ).addTo(disposables)
     }
 

@@ -31,44 +31,4 @@
 
 package com.raywenderlich.android.gitfeed
 
-import io.reactivex.Observable
-import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Path
-
-
-interface GitHubApi {
-
-  companion object {
-    fun create(): GitHubApi {
-
-      val logging = HttpLoggingInterceptor()
-      logging.level = HttpLoggingInterceptor.Level.BODY
-
-      val client = OkHttpClient.Builder()
-              .addInterceptor(logging)
-              .build()
-
-      val retrofit = Retrofit.Builder()
-              .client(client)
-              .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-              .addConverterFactory(GsonConverterFactory.create())
-              .baseUrl("https://api.github.com/")
-              .build()
-
-      return retrofit.create(GitHubApi::class.java)
-    }
-  }
-
-  @GET("repos/{repo}/events")
-  fun fetchEvents(@Path("repo", encoded = true) repo: String)
-          : Observable<Response<List<AnyDict>>>
-
-  @GET("search/repositories?q=language:kotlin&per_page=5")
-  fun fetchTopKotlinRepos(): Observable<TopResponse>
-}
+class TopResponse(val items: List<AnyDict>?)
